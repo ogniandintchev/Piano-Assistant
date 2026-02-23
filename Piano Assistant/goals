@@ -1,0 +1,161 @@
+
+COMLPETE THESE BY MONDAY NIGHT
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+implement a sight reading quiz
+- random pieces of sheet music are selected
+- tested to see how accurate it is
+- post quiz recap of what the notes were, accuracy, speed, etc.
+
+
+Should notes that are wrong be wrong fully, or give partial credit for proximity?
+
+
+
+User plays all notes in the sheet, then presses end test
+Notes get added to a buffer of size chord[i] + i+1 + i+2
+The buffer runs an algorithm that determines which RANGE of notes is most accurate, and removes those from the buffer.
+Calculate and record how accurate the best chord is
+Repeat until all events are cycled through
+Using this implementation, last must take all remaining notes in the buffer
+- If someone plays extra past the song, they're not wrong on the rest of the song but they are wrong on the ending so it reflects properly to only punish the ending.
+calculate total accuracy
+Display a comparison of chords detected and notes expected.
+
+
+
+- Play the sheet at a consistent time and have the user play the notes on time.
+- - BPM increases as difficulty increases
+- - Treat it like a rhythm game like guitar hero or something.
+- Show a bar as it goes it plays to show the timing of it
+- Notes that should be played have given timings to play
+- Notes that are pressed between times of chords should be checked which chord to assign the note to and select which is the higher score
+- Use late penalties, note proximities(?)
+
+
+
+Psuedo Code
+
+Scores are not arrays of chords, but arrays of NoteIntervals
+
+Score moves at a given BPM, easy is slow hard is fast
+- For scanned sheet music, allow an option to change the BPM for practice and what not
+
+Each note has an interval depending on its duration
+
+When a note is played, look at the active intervals at that point
+
+If a note overlaps interval in NoteInterval then increase duration played of interval, else add to WrongIntervals
+- Have a little buffer at start and end of intervals
+- If a note is played before a notes interval but within its buffer, count that note for the buffered note if it doesnt count better for playing for the previous interval
+- Duration of a note being played is defined as time from noteOn -> noteOff
+- - If a note is played way to early and is wrong, but is held till later then it should be right
+- - - Look at all overlapping intervals while the note is on, and if there is one that matches then penalize early and then continue duration
+- - - If a note is played early AND wrong then intervals will overlap but note won't
+- Dont compare just notes, compare notes that have overlapping intervals
+
+If a wrong note is played during an interval, record when the note was played
+- Record the midi and the time of noteOn, which can be rendered later to show an incorrect note
+
+Once song is over, the song of Intervals that started with all now have DurationPlayed values
+
+Score is calculated based on the Duration, Missed notes, Incorrect notes, etc.
+
+
+
+Listen for 1 byte packet OxF8 that happens 24 times per second, MIDI Clock
+
+
+// Note number is implicit to index of NoteInterval in song array
+struct Interval {
+
+    let noteOn : number // Could be a measure of time, an X coordinate, whatever
+    let noteOff : number
+    let durationPlayed : number // 0-100 or 0-1 just something to get a total played amount
+    
+}
+
+// All intervals of a given note, intervals of C or D etc.
+struct NoteInterval {
+
+    let cursor : number // Once an interval is completely past, increment the curor so the next note could only be the earliest
+    let intervals : Interval[]
+    let wrongIntervals : Interval[] // Any time period where it doesn't overlap with interval or its buffer goes here
+    // Wrong notes will go into their respective NoteInterval.wrongIntervals to be handled later
+
+    
+
+}
+
+struct Song {
+
+    noteIntervals : NoteInterval[127] // Correct note intervals, size being # of possible midi notes,
+
+}
+
+
+
+Song : [Interval]
+WrongNotes : [Interval] // An interval with a wrong note played, on should be 0 and off should be max, duration played gives how long of the song total that was played wrong?
+
+
+
+
+
+Make a GitHub repo, add documentation, look into what is actually needed
+- Dont include the stupid test or UI test files, check if I can delete them at no cost
+- What do I upload? Just the source code or the entire projectile folder
+
+
+
+Add this app on resume and LinkedIn
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Resize Sheet view as needed
+- Small images might be super zoomed out
+- Some songs with high range of notes in a measure might not fit all measures in the view
+- - This can happen especially after I take more space for display for text
+
+Potentially re-render the PDF from audiveris to make it as accurate as possible, some error propagation might be
+cause of this, could also be handy to use for using hand photos
+
+Visual display for notes
+- Probably text for now, just for the sake of getting something out
+- Keyboard overlay with highlighted keys?
+- Toggle between different displays, text, keyboard, none
+- - Use enums for this
+
+Automatically prompt to connect to actively pairing MIDI devices?
+- that way no manual search has to be done, app just picks up on it and says "this one?"
+- setting to turn this on and off
+- - add a "remember device" or "always connect" option
+
+Optimize buttons
+- Really only need "Run Audiveris" but testing demands they be separate, combine "select input" "select output" etc.
+
+Function to transfer a file from desktop to phone via bluetooth or something
+- Send a text file or something so mobile app does not have to reparse the xml file
+
+
+Volta bracket handling
+- ending numbers
+
+      <barline location="right">
+        <bar-style>light-heavy</bar-style>
+        <ending number="1" type="stop" end-length="20" default-y="31"></ending> <-----
+        <repeat direction="backward"></repeat>
+      </barline>
+      
+    <barline location="left">
+        <bar-style>light-heavy</bar-style>
+        <ending number="2" type="start" end-length="20" default-y="31"></ending>  <-----
+      </barline>
+
+Additional Low Prio features
+- Add an option to select the scale the PNGs get put to, bigger scale means better scan but bigger file size
+- Add an option that allows them to enter an XML file and its corresponding file manually, as this allows people to make the corrections to their scan directly on audiveris as needed
+- Edge case of notation that indicates up one octave being registered?
+
+Procedually generate sheet music based off of Audiveris?
+- Hand taken photos do not work well with current implication
