@@ -16,7 +16,7 @@ Audiveris is an Open Source Music Recongition tool. Their github repo is linked 
 https://github.com/Audiveris/audiveris
 
 
-Future Plans:
+## Future Plans:
 * Properly implement the use of volta brackets
 * Create sight reading quizes, no annotations or help during play
 * Show where the user pressed wrong notes by overlaying the mistakes onto the sheet music for review
