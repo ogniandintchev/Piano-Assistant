@@ -1,10 +1,3 @@
-//
-//  Item.swift
-//  Piano Assistant
-//
-//  Created by Og D on 11/2/25.
-//
-
 import Foundation
 import SwiftData
 import SwiftUI

@@ -159,3 +159,7 @@ Additional Low Prio features
 
 Procedually generate sheet music based off of Audiveris?
 - Hand taken photos do not work well with current implication
+
+
+
+/Applications/Audiveris.app/Contents/MacOS/audiveris -constant implicitTuplets=true -batch -export -constant useCompression=false -option omr.score.rhythm.strict=false -output "/Users/Og/Desktop/CLIOutput/" "/Users/Og/Desktop/alkan1.png"

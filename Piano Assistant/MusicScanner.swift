@@ -1,9 +1,4 @@
-//
-//  MusicScanner.swift
-//  Piano Assistant
-//
-//  Created by Og D on 11/26/25.
-//
+
 // #if macOS TODO: RETRIGGER THIS IF ENDIF BLOCK BEFORE EXPORT TO IOS
 
 import Foundation
@@ -12,10 +7,7 @@ import SwiftData
 import PDFKit
 // TODO: NSImage is for MacOS, UIImage is for IOS
 
-// Enabling implicitTuplets fixed a problem where tuplets weren't recognized, the longer beat count made
-// the ending notes too long for the measure, and excluded them from the XML
 
-//  /Applications/Audiveris.app/Contents/MacOS/audiveris -constant implicitTuplets=true -batch -export -constant useCompression=false -option omr.score.rhythm.strict=false -output "/Users/Og/Desktop/CLIOutput/" "/Users/Og/Desktop/alkan1.png"
 
 class MusicScanner {
     
@@ -197,6 +189,9 @@ class MusicScanner {
         
         let process = Process()
         process.executableURL = URL(filePath: audiverisPath)
+        
+        // Enabling implicitTuplets fixed a problem where tuplets weren't recognized, the longer beat count made
+        // the ending notes too long for the measure, and excluded them from the XML
         process.arguments = [
             "-batch",
             "-constant",
@@ -645,7 +640,7 @@ class MusicScanner {
     }
     
     
-    func scan(item: Item, onlyPDF : Bool = false) async {
+    func scan(item: Item, onlyPNG : Bool = false) async {
         
         // Prompts the user to select the files
         await setInputPath()
@@ -667,7 +662,7 @@ class MusicScanner {
             }
         }
         
-        if (onlyPDF) { return }
+        if (onlyPNG) { return }
         
         // Run audiveris on the urls stored in inputDir, populates xmlPaths with XML files
         //xmlPaths = runAudiveris(item: item)

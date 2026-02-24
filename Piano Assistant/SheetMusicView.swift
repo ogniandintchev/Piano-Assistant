@@ -1,10 +1,3 @@
-//
-//  SheetMusicView.swift
-//  Piano Assistant
-//
-//  Created by Og D on 1/10/26.
-//
-
 import Foundation
 import SwiftUI
 

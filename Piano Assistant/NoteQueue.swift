@@ -1,10 +1,3 @@
-//
-//  Queue.swift
-//  Piano Assistant
-//
-//  Created by Og D on 11/15/25.
-//
-
 import SwiftUI
 import Combine
 

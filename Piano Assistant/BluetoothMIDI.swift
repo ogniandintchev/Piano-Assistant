@@ -1,10 +1,3 @@
-//
-//  BluetoothMIDI.swift
-//  Piano Assistant
-//
-//  Created by Og D on 11/13/25.
-//
-
 import SwiftUI
 import CoreMIDI
 import Combine
@@ -14,7 +7,6 @@ class BluetoothMIDI: ObservableObject {
     private var client = MIDIClientRef() // Client (the app) for MIDI
     private var inputPort = MIDIPortRef() // Where input is recieved
     var handler : SongHandler
-    // @Published var latestMessage: [UInt8] = [] // @Published means that this variable is accessible in structs
     
     init(_ h: SongHandler) {
         

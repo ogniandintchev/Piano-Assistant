@@ -1,19 +1,5 @@
-//
-//  SongHandler.swift
-//  Piano Assistant
-//
-//  Created by Og D on 11/16/25.
-//
-// TODO: Experiment with adding another path of recording via on key inputs and maybe finding chords by noticing
-// TODO: that a given packet had more than 1 input. Could chords be recorded consistently?
-// TODO: Low Priority TODO, this was mainly used for testing maybe constructing sheet music waaaaaaay later
-
 import SwiftUI
 import Combine
-
-// SwiftUI does't handle array of arrays best in ForEach loops since it can get confused when using .indices
-// so create an Idnetifiable struct so SwiftUI can track updates to the arrays
-
 
 class SongHandler : ObservableObject {
     
@@ -32,14 +18,11 @@ class SongHandler : ObservableObject {
     
     init(queue: NoteQueue){
         queueObject = queue
-        //arr = queueObject.current
+        
     }
     
     func newSong(new : [Chord]) {
         queueObject.add(input: new)
-//        DispatchQueue.main.async {
-//            self.arr = new
-//        }
     }
     
     func current() -> Chord { return queueObject.current }
@@ -80,15 +63,15 @@ class SongHandler : ObservableObject {
         
             if(printPressed) { print(bytes[1]) }
             
-            if (bytes[1] == 21) {
-                if recordInputs {
-                    recordInputs = false
-                    print(recorded)
-                    currentlyHeld = []
-                    recorded = []
-                }
-                else if !recordInputs { recordInputs = true }
-            }
+//            if (bytes[1] == 21) {
+//                if recordInputs {
+//                    recordInputs = false
+//                    print(recorded)
+//                    currentlyHeld = []
+//                    recorded = []
+//                }
+//                else if !recordInputs { recordInputs = true }
+//            }
             
         }
         
