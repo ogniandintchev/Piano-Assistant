@@ -11,10 +11,12 @@ This app uses an open source Music Recognition model, Audiveris, to automaticall
 * Persistently stores both note data, and images of the sheet music.
 * Play your sheet music with highlighted notes, and displaying what notes to press via text.
 
+![Untitled](https://github.com/user-attachments/assets/56143aea-13f0-48dd-a4c4-df8041725fd4)
+
+
 ## Audiveris
 Audiveris is an Open Source Music Recongition tool. Their github repo is linked below.
 https://github.com/Audiveris/audiveris
-
 
 ## Future Plans:
 * Properly implement the use of volta brackets
@@ -24,3 +26,5 @@ https://github.com/Audiveris/audiveris
 * Regenerate sheet music via Audiveris to ensure clean sheet music is displayed.
 * iOS support
 * Transfer pre-processed song data to iOS app via Bluetooth to play songs on mobile devices
+
+
