@@ -1,11 +1,19 @@
+error handling for empty measures - width still needs to be added to offset
 
-COMLPETE THESE BY MONDAY NIGHT
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+new page system height needs to be added, system height setting to 0 puts notes off page
+- Create a function that takes a <print> node, and pointers to the system variables and edit and parse
+    directly in the function. Call function on first run, and on "new-page" calls
+
+add error checking to only allow accepted file types for Audiveris
+
 
 implement a sight reading quiz
 - random pieces of sheet music are selected
 - tested to see how accurate it is
 - post quiz recap of what the notes were, accuracy, speed, etc.
+
+Refactor MusicScanner file - TLDR ugly to look through split file
 
 
 Should notes that are wrong be wrong fully, or give partial credit for proximity?
@@ -100,17 +108,7 @@ WrongNotes : [Interval] // An interval with a wrong note played, on should be 0 
 
 
 
-
-
-Make a GitHub repo, add documentation, look into what is actually needed
-- Dont include the stupid test or UI test files, check if I can delete them at no cost
-- What do I upload? Just the source code or the entire projectile folder
-
-
-
-Add this app on resume and LinkedIn
-
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Experiment with calculating TenthstoPixels via actual file pixel size and not point size, might fix small drift
 
 Resize Sheet view as needed
 - Small images might be super zoomed out
@@ -162,4 +160,10 @@ Procedually generate sheet music based off of Audiveris?
 
 
 
-/Applications/Audiveris.app/Contents/MacOS/audiveris -constant implicitTuplets=true -batch -export -constant useCompression=false -option omr.score.rhythm.strict=false -output "/Users/Og/Desktop/CLIOutput/" "/Users/Og/Desktop/alkan1.png"
+
+binaryThreshold - bigger means lighter grays become black during binarization step
+
+/Applications/Audiveris.app/Contents/MacOS/audiveris -constant implicitTuplets=true -batch -export -constant useCompression=false -constant binaryThreshold=150 -option omr.score.rhythm.strict=false -output "/Users/Og/Desktop/CLIOutput/" "/Users/Og/Desktop/alkan1.png"
+
+github cd
+cd "Documents/Piano-Assistant/Piano Assistant/"

@@ -15,19 +15,19 @@ struct ContentView: View {
     
     @State private var showSheetView = false
     
-    // THESE ALERT STATES CAN BE TURNED INTO AN ENUM LATER
+    
     @State private var typeAlert : Bool = false
-    @State private var showingAlert: Bool = false
-    @State private var emptyName : Bool = false
-    @State private var nameOverlap : Bool = false
-    @State private var specChar : Bool = false
+    
+    // Store array of booleans to indicate errors. isPresented checks do not allow computing a boolean
+    // 0 = No Error, 1 = Empty Name, 2 = Name Overlap, 3 = Special Character
+    @State private var scanErr : [Bool] = [false, false, false, false]
     
     // Testing input that only converts a scanned PDF to PNGs, does not sacn them
     @State private var onlyPNG : Bool = false
     
     
     public init() {
-        self.showingAlert = false
+        
         name = ""
         scanner = MusicScanner()
     }
@@ -45,38 +45,53 @@ struct ContentView: View {
                         }
                         .alert("Please enter the name of song", isPresented: $typeAlert) {
                             TextField("Song name", text: $songName)
-                            Button("OK") {
+                            
+                            Button("Custom Import") {
+                                let err : Int = scanner.checkScanErrors(items: items, songName: songName)
+                                scanErr[err] = true
                                 
-                                for i in items {
-                                    if i.title == songName {
-                                        nameOverlap = true
-                                        typeAlert = false
-                                    }
-                                }
-                                
-                                if songName == "" {
-                                    emptyName = true
-                                    typeAlert = false
-                                }
-                                else if !scanner.isAlphanumeric(string: songName) {
-                                    specChar = true
-                                    typeAlert = false
-                                }
-                                else if !nameOverlap {
-                                    
-                                    let test = Item(n: songName)
+                                if scanErr[0] {
+                                    let new = Item(n: songName)
                                     
                                     Task {
                                         let temp : Bool = onlyPNG
-                                        await scanner.scan(item: test, onlyPNG: temp)
+                                        await scanner.scan(item: new, onlyPNG: temp, customImport: true)
                                     }
                                     
                                     withAnimation {
-                                        modelContext.insert(test)
+                                        modelContext.insert(new)
                                     }
                                     typeAlert = false
                                     songName = ""
+                                    scanErr[0] = false
+                                } else {
+                                    typeAlert = false
                                 }
+                                
+                                
+                            }
+                            Button("OK") {
+                                let err : Int = scanner.checkScanErrors(items: items, songName: songName)
+                                scanErr[err] = true
+                                
+                                if scanErr[0] {
+                                    let new = Item(n: songName)
+                                    
+                                    Task {
+                                        let temp : Bool = onlyPNG
+                                        await scanner.scan(item: new, onlyPNG: temp)
+                                    }
+                                    
+                                    withAnimation {
+                                        modelContext.insert(new)
+                                    }
+                                    typeAlert = false
+                                    songName = ""
+                                    scanErr[0] = false
+                                } else {
+                                    typeAlert = false
+                                }
+                                
                             }
                             
                             Button("Cancel") {
@@ -84,32 +99,34 @@ struct ContentView: View {
                             }
                         } message: { Text("Please enter a name for the song") }
                         
-                        .alert("Please try again and enter a name", isPresented: $emptyName) {
+                            .alert("Please try again and enter a name", isPresented: (
+                                $scanErr[1])
+                            ) {
                             Button("OK") {
-                                emptyName = false
                                 typeAlert = true
+                                scanErr[1] = false
                             }
                         }
                         
-                        .alert("You already have a song named that. Please try again.", isPresented: $nameOverlap) {
+                            .alert("You already have a song named that. Please try again.", isPresented: $scanErr[2]) {
                             Button("OK") {
-                                emptyName = false
                                 typeAlert = true
+                                scanErr[2] = false
                             }
                         }
                         
-                        .alert("Please only use alphanumeric characters in the name!", isPresented: $specChar) {
+                            .alert("Please only use alphanumeric characters in the name!", isPresented: $scanErr[3]) {
                             Button("OK") {
-                                specChar = false
                                 typeAlert = true
+                                scanErr[3] = false
                             }
                         }
                         
                         // When scanning sheet music, will only convert PDF to PNGs and will not scan.
-//                        Button("Get PNGs Only") {
-//                            if (onlyPNG == false) { onlyPNG = true }
-//                            else { onlyPNG = false }
-//                        }
+                        Button("Get PNGs Only") {
+                            if (onlyPNG == false) { onlyPNG = true }
+                            else { onlyPNG = false }
+                        }
                         
                         ForEach(items, id: \.id) { item in
                             NavigationLink {
@@ -155,7 +172,6 @@ struct ContentView: View {
                             } label: {
                                 if let n = item.title { Text(n) }
                             }
-                            
                             
                         }
                         

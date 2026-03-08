@@ -65,7 +65,7 @@ struct SheetMusicView : View {
                             
                             if handler.current().notes.count != 0 {
                                 ForEach(handler.current().notes) { note in
-                                    let colors : [String : Color] = ["bb": .red, "b": .orange, "": .yellow, "#": .blue, "x": .purple]
+                                    let colors : [String : Color] = ["bb": .red, "b": .orange, "": .yellow, "#": .blue, "x": .purple, "!": .white]
                                     NoteHighlight(x: CGFloat(note.posX), y: CGFloat(note.posY), color: colors[note.accidental]!)
                                 }
                                 

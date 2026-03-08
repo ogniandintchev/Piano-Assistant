@@ -37,16 +37,6 @@
 			path = "Piano Assistant";
 			sourceTree = "<group>";
 		};
-		CE29376F2EB8606D005D8891 /* Piano AssistantTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Piano AssistantTests";
-			sourceTree = "<group>";
-		};
-		CE2937792EB8606D005D8891 /* Piano AssistantUITests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = "Piano AssistantUITests";
-			sourceTree = "<group>";
-		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -80,8 +70,6 @@
 				CE81CA042F4D0E4D00337381 /* README.md */,
 				CE81CA032F4D0E3F00337381 /* .gitignore */,
 				CE29375F2EB8606C005D8891 /* Piano Assistant */,
-				CE29376F2EB8606D005D8891 /* Piano AssistantTests */,
-				CE2937792EB8606D005D8891 /* Piano AssistantUITests */,
 				CE1930A82EF3C99D00FED156 /* Piano Assistant.app */,
 				CE1930A92EF3C99D00FED156 /* Piano AssistantTests.xctest */,
 				CE1930AA2EF3C99D00FED156 /* Piano AssistantUITests.xctest */,
@@ -126,9 +114,6 @@
 			dependencies = (
 				CE29376E2EB8606D005D8891 /* PBXTargetDependency */,
 			);
-			fileSystemSynchronizedGroups = (
-				CE29376F2EB8606D005D8891 /* Piano AssistantTests */,
-			);
 			name = "Piano AssistantTests";
 			packageProductDependencies = (
 			);
@@ -148,9 +133,6 @@
 			);
 			dependencies = (
 				CE2937782EB8606D005D8891 /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				CE2937792EB8606D005D8891 /* Piano AssistantUITests */,
 			);
 			name = "Piano AssistantUITests";
 			packageProductDependencies = (

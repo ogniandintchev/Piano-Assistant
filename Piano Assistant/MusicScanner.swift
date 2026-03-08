@@ -11,6 +11,8 @@ import PDFKit
 
 class MusicScanner {
     
+
+    
     var inputDir : [URL] = []
     var sheetMusicName : String = ""
     var xmlPaths : [URL] = []
@@ -35,9 +37,29 @@ class MusicScanner {
         return out.appendingPathComponent("Piano-Assistant/Songs")
     }
     
-    var fileExtension = ""
+    func checkScanErrors(items : [Item], songName : String) -> Int {
+        for i in items {
+            if i.title == songName {
+                return 2
+            }
+        }
+        
+        if songName == "" {
+            return 1
+        }
+        else if !isAlphanumeric(string: songName) {
+            return 3
+        }
+        
+        return 0
+    }
+    
+    
+    
 
-    func isAlphanumeric(string: String) -> Bool { return (string.rangeOfCharacter(from: CharacterSet.alphanumerics.inverted) == nil) }
+    func isAlphanumeric(string: String) -> Bool {
+        return (string.rangeOfCharacter(from: CharacterSet.alphanumerics.inverted) == nil)
+    }
     
     // function to receive an input path, checks not needed since path to be found via file viewer window
     func setInputPath() async {
@@ -61,22 +83,25 @@ class MusicScanner {
         }
     }
     
-    func setXmlPath() {
-        let panel = NSOpenPanel()
-        panel.title = "Select the XML File"
-        panel.message = "Choose the file that will be parsed."
-        panel.prompt = "Choose"
-        panel.canChooseFiles = true
-        panel.canChooseDirectories = false
-        panel.allowsMultipleSelection = false
-        panel.canCreateDirectories = false
-        
-        panel.begin { response in
-            if response == .OK {
-                for url in panel.urls {
-                    self.xmlPaths.append(url)
+    func setXmlPath() async {
+        await withCheckedContinuation { continuation in
+            let panel = NSOpenPanel()
+            panel.title = "Select the XML File"
+            panel.message = "Choose the file that will be parsed."
+            panel.prompt = "Choose"
+            panel.canChooseFiles = true
+            panel.canChooseDirectories = false
+            panel.allowsMultipleSelection = false
+            panel.canCreateDirectories = false
+            
+            panel.begin { response in
+                if response == .OK {
+                    for url in panel.urls {
+                        self.xmlPaths.append(url)
+                    }
+                    print(self.xmlPaths)
                 }
-                print(self.xmlPaths)
+                continuation.resume()
             }
         }
     }
@@ -117,8 +142,7 @@ class MusicScanner {
         let fileName = outputURL.deletingPathExtension().lastPathComponent
         var images : [URL] = []
         
-        // Audiveris calculates values off of given dimensions, changing means propagating the change everywhere
-        let scale : CGFloat = 6
+        
         
         // Convert the PDF to PNGs that are stored at that same directory, then return an array of URLs to each image
 
@@ -131,6 +155,8 @@ class MusicScanner {
             guard let page = pdfDocument.page(at: i) else { continue }
 
             let rect = page.bounds(for: .mediaBox)
+            // Audiveris calculates cordinates off of given dimensions, changing means propagating the change everywhere
+            let scale = getMaxAudiverisScale(height: rect.height, width: rect.width);
             let width = Int(rect.width * scale)
             let height = Int(rect.height * scale)
 
@@ -243,17 +269,24 @@ class MusicScanner {
 
     }
     
-    func getCombinedSong(item: Item) -> [Chord]{
+    func getCombinedSong(item: Item) -> [Chord] {
         
         var parsedChords : [Chord] = []
         var errorPages : [URL] = []
         var repeatNum : Int = 0
         
-        for i in 0...xmlPaths.count-1 {
+        for i in 0..<xmlPaths.count {
             let image = item.filePath[i]
+            let scales : [CGFloat];
+            
+            if item.filePath[i].pathExtension == "pdf" {
+                scales = getPDFScales(pdf: item.filePath[i])
+            } else {
+                scales = getImageScale(image: item.filePath[i]) // This deals in points (?)
+            }
             
             let beforeParse : Int = parsedChords.count
-            parseXML(xmlURL: xmlPaths[i], imagePath : image, repeatChord: &repeatNum, songArray: &parsedChords)
+            parseXML(xmlURL: xmlPaths[i], imagePath : image, repeatChord: &repeatNum, songArray: &parsedChords, scales: scales)
             
             // If no chords were added over an entire file, something went wrong and skip that image
             if beforeParse == parsedChords.count {
@@ -279,10 +312,12 @@ class MusicScanner {
     // TODO: function to write a text file with the ordered notes and details for easy transport & light storage
     
     // Function to parse xml for data (notes, positions, etc.)
-    func parseXML(xmlURL : URL, imagePath : URL, repeatChord : inout Int, songArray: inout [Chord]) {
+    func parseXML(xmlURL : URL, imagePath : URL, repeatChord : inout Int, songArray: inout [Chord], scales: [CGFloat]) {
         
         // Values are set as an offset in steps from the first key in its octave
         let letterConv : [String : Double] = ["C":0, "D":2, "E":4, "F":5, "G":7, "A":9, "B":11, "error": -1]
+        
+        var scaleCur : Int = 0;
         
         guard let xml = try? XMLDocument(contentsOf: xmlURL)
         else {
@@ -383,6 +418,8 @@ class MusicScanner {
                     
                     let pageBreak = Chord(notes: [breakNote], order: songArray.count)
                     songArray.append(pageBreak)
+                    
+                    scaleCur+=1
                     
                 }
                 
@@ -506,8 +543,8 @@ class MusicScanner {
                         // Tenths are one tenth the size of the space between staff lines
                         // measureOffset offsets for the x ranges of the previous measure(s)
                         // noteXTenths is the left edge of the note, add 5 tenths to get the center
-                        noteX = (noteXTenths + leftMargin! + measureOffset + 5) * tenthsToPixels
-                        noteY = (staffDistances[noteStaff!] + staffStep) * tenthsToPixels
+                        noteX = (noteXTenths + leftMargin! + measureOffset + 5) * tenthsToPixels * scales[scaleCur]
+                        noteY = (staffDistances[noteStaff!] + staffStep) * tenthsToPixels * scales[scaleCur]
                         
                         let noteId : Int = Int(noteX * noteY)
                         let alterConv = [-2: "bb", -1: "b", 0: "", 1: "#", 2: "x"]
@@ -639,17 +676,62 @@ class MusicScanner {
         
     }
     
+    func getPDFScales(pdf: URL) -> [CGFloat] {
+        var scales : [CGFloat] = [];
+        
+        guard let pdfDocument = PDFDocument(url: pdf) else {
+            print("Failed to load PDF")
+            return []
+        }
+        
+        for i in 0..<pdfDocument.pageCount {
+            guard let page = pdfDocument.page(at: i) else { continue }
+            let rect = page.bounds(for: .mediaBox)
+            let area = rect.width * rect.height
+            let scale : CGFloat = getMaxAudiverisScale(height: rect.height, width: rect.width)
+            scales.append(scale)
+            
+        }
+        return scales
+    }
     
-    func scan(item: Item, onlyPNG : Bool = false) async {
+    func getImageScale(image: URL) -> [CGFloat] {
+        let image = NSImage(contentsOfFile: image.path)!
+        let area = image.size.width * image.size.height;
+        let scales : [CGFloat] = [getMaxAudiverisScale(height: image.size.height, width: image.size.width)]
+        return scales
+    }
+    
+    func getMaxAudiverisScale(height: CGFloat, width: CGFloat) -> CGFloat {
+        let area = height * width
+        return CGFloat(20000000/area)
+    }
+    
+    func scan(item: Item, onlyPNG : Bool = false, customImport : Bool = false) async {
         
         // Prompts the user to select the files
         await setInputPath()
         
-        if (item.title!.rangeOfCharacter(from: CharacterSet.alphanumerics) != nil) {
+        if (item.title!.rangeOfCharacter(from: CharacterSet.alphanumerics.inverted) != nil) {
             print("what the frick")
         }
         
         item.filePath = copyFiles(sourceURLs: inputDir, dirName: item.title!)
+
+        
+        
+        if customImport {
+            await setXmlPath()
+        } else {
+            
+            // Run audiveris on the urls stored in inputDir, populates xmlPaths with XML files
+            //xmlPaths = runAudiveris(item: item)
+            xmlPaths = testXMLFiles(item: item) // Use this function to get XML paths in sandbox since Audiveris cant run
+        }
+        
+        
+        // Run parseXML for each XML file inserted and insert pageBreak notes after every file
+        item.songArray = getCombinedSong(item: item)
         
         for file in item.filePath {
             if file.pathExtension == "pdf" {
@@ -661,16 +743,9 @@ class MusicScanner {
                 }
             }
         }
-        
+
         if (onlyPNG) { return }
         
-        // Run audiveris on the urls stored in inputDir, populates xmlPaths with XML files
-        //xmlPaths = runAudiveris(item: item)
-        xmlPaths = testXMLFiles(item: item) // Use this function to get XML paths in sandbox since Audiveris cant run
-        
-        // Run parseXML for each XML file inserted and insert pageBreak notes after every file
-        item.songArray = getCombinedSong(item: item)
-        print("Final size is, \(item.songArray.count)")
         
         // After parsing is completed, clear out the no longer needed xml files in local files
         //clearOutputFolder()
