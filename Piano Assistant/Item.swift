@@ -8,6 +8,7 @@ final class Item {
     
     
     var songArray: [Chord]
+    var songIntervals : [NoteIntervals]
     
     var title: String?
     
@@ -18,6 +19,7 @@ final class Item {
         title = n
         filePath = []
         self.songArray = []
+        self.songIntervals = Array(repeating: NoteIntervals(), count: 127 )
     }
     
     
@@ -66,8 +68,10 @@ final class Note : CustomStringConvertible, Identifiable, Equatable {
         "\(note)\(accidental)\(octave)"
     }
     var measureMidY : Double
+    var duration : Double
+    var interval : Interval;
     
-    init(id: Int, midi: Int, note: String, accidental: String, octave: Int, posX: Double, posY: Double, measureMidY: Double) {
+    init(id: Int, midi: Int, note: String, accidental: String, octave: Int, posX: Double, posY: Double, measureMidY: Double, duration : Double, interval: Interval) {
         self.id = id
         self.midi = midi
         self.note = note
@@ -76,10 +80,12 @@ final class Note : CustomStringConvertible, Identifiable, Equatable {
         self.posX = posX
         self.posY = posY
         self.measureMidY = measureMidY
+        self.duration = duration
+        self.interval = interval
     }
     
     public func copy() -> Note {
-        return Note(id: id, midi: midi, note: note, accidental: accidental, octave: octave, posX: posX, posY: posY, measureMidY: measureMidY)
+        return Note(id: id, midi: midi, note: note, accidental: accidental, octave: octave, posX: posX, posY: posY, measureMidY: measureMidY, duration: duration, interval: interval)
     }
     
     static func == (lhs: Note, rhs: Note) -> Bool {
@@ -131,4 +137,43 @@ final class Chord : CustomStringConvertible, Comparable, CustomDebugStringConver
         return lhs.order < rhs.order
     }
 
+}
+
+@Model
+final class Interval {
+    var start : Double = 0;
+    var end : Double = 0;
+    var durationPlayed : Double = 0;
+    var y : Double = 0;
+    
+    init(start: Double, end: Double, durationPlayed: Double, y: Double) {
+        self.start = start;
+        self.end = end;
+        self.durationPlayed = durationPlayed;
+        self.y = y;
+    }
+    
+    init(start: Double, end: Double, y: Double){
+        self.start = start;
+        self.end = end;
+        self.durationPlayed = 0;
+        self.y = y;
+    }
+    
+    init() {
+        
+    }
+    
+}
+
+@Model
+final class NoteIntervals {
+    var cursor : Int = 0;
+    var intervals : [Interval] = [];
+    var wrongIntervals : [Interval] = [];
+    
+    init() {
+        
+    }
+    
 }

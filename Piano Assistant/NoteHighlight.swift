@@ -17,3 +17,23 @@ struct NoteHighlight: View {
         
     }
 }
+
+
+
+struct IntervalHighlight: View {
+    var x: CGFloat
+    var y: CGFloat
+    var width: CGFloat
+    var height: CGFloat = 40
+    var color: Color
+    var opacity: Double = 0.5
+    
+    var body: some View {
+        Rectangle()
+            .fill(color)
+            .opacity(opacity)
+            .frame(width: width, height: height)
+            .position(x: x + width/2, y: y)
+            
+    }
+}

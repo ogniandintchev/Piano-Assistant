@@ -20,7 +20,7 @@ struct Piano_AssistantApp: App {
         for noteArr in testNotes {
             var chord : [Note] = []
             for value in noteArr {
-                chord.append(Note(id:value, midi: value, note:"", accidental:"", octave:-100, posX:0, posY:0, measureMidY: CGFloat(100)))
+                chord.append(Note(id:value, midi: value, note:"", accidental:"", octave:-100, posX:0, posY:0, measureMidY: CGFloat(100), duration: 1, interval: Interval()))
             }
             testQueue.append(Chord(notes: chord, order: i))
             i+=1

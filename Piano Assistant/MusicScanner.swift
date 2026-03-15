@@ -282,11 +282,11 @@ class MusicScanner {
             if item.filePath[i].pathExtension == "pdf" {
                 scales = getPDFScales(pdf: item.filePath[i])
             } else {
-                scales = getImageScale(image: item.filePath[i]) // This deals in points (?)
+                scales = [1] // This deals in points (?)
             }
             
             let beforeParse : Int = parsedChords.count
-            parseXML(xmlURL: xmlPaths[i], imagePath : image, repeatChord: &repeatNum, songArray: &parsedChords, scales: scales)
+            parseXML(xmlURL: xmlPaths[i], imagePath : image, repeatChord: &repeatNum, songArray: &parsedChords, scales: scales, noteIntervals : &item.songIntervals)
             
             // If no chords were added over an entire file, something went wrong and skip that image
             if beforeParse == parsedChords.count {
@@ -295,7 +295,7 @@ class MusicScanner {
             }
             
             if i != xmlPaths.count-1 {
-                let breakNote = Note(id: 0, midi: -1, note: "BREAK", accidental: "!", octave: -1, posX: 0, posY: 0, measureMidY: 0)
+                let breakNote = Note(id: 0, midi: -1, note: "BREAK", accidental: "!", octave: -1, posX: 0, posY: 0, measureMidY: 0, duration: 0, interval: Interval())
                 let pageBreak = Chord(notes: [breakNote], order: parsedChords.count)
                 parsedChords.append(pageBreak)
             }
@@ -312,7 +312,7 @@ class MusicScanner {
     // TODO: function to write a text file with the ordered notes and details for easy transport & light storage
     
     // Function to parse xml for data (notes, positions, etc.)
-    func parseXML(xmlURL : URL, imagePath : URL, repeatChord : inout Int, songArray: inout [Chord], scales: [CGFloat]) {
+    func parseXML(xmlURL : URL, imagePath : URL, repeatChord : inout Int, songArray: inout [Chord], scales: [CGFloat], noteIntervals : inout [NoteIntervals]) {
         
         // Values are set as an offset in steps from the first key in its octave
         let letterConv : [String : Double] = ["C":0, "D":2, "E":4, "F":5, "G":7, "A":9, "B":11, "error": -1]
@@ -374,6 +374,14 @@ class MusicScanner {
             
             var measureRepeatBar = false
             
+            var beats : Double = 4;
+            
+            var beatType : Double = 4;
+            
+            var divisions : Double = 24;
+            
+            var measureQuarterBeats : Double = 4;
+            
             for measure in measureNodes {
 
 
@@ -413,7 +421,9 @@ class MusicScanner {
                         octave: -1,
                         posX: 0,
                         posY: 0,
-                        measureMidY: 0
+                        measureMidY: 0,
+                        duration: 0,
+                        interval: Interval()
                     )
                     
                     let pageBreak = Chord(notes: [breakNote], order: songArray.count)
@@ -517,6 +527,12 @@ class MusicScanner {
                                 .stringValue ?? "1"
                         )
                         
+                        let noteDuration = Double(
+                            try! note.nodes(forXPath: "duration")
+                                .first?
+                                .stringValue ?? "2"
+                        )
+                        
                         let noteValue = (noteOctave + 1) * 12 + (noteStep + noteAlter!)
                         
                         // Calculate absolute Y in MusicXML tenths
@@ -549,6 +565,8 @@ class MusicScanner {
                         let noteId : Int = Int(noteX * noteY)
                         let alterConv = [-2: "bb", -1: "b", 0: "", 1: "#", 2: "x"]
                         
+                        let distance : Double = ((noteDuration! / divisions) / measureQuarterBeats) * measureWidth! * tenthsToPixels
+                        
                         let noteNode = Note(
                             id: noteId,
                             midi: Int(noteValue),
@@ -557,8 +575,12 @@ class MusicScanner {
                             octave: Int(noteOctave),
                             posX: noteX,
                             posY: noteY,
-                            measureMidY: measureMid
+                            measureMidY: measureMid,
+                            duration: noteDuration!,
+                            interval: Interval(start: noteX, end: noteX+distance, y: noteY)
                         )
+                        
+                        
                         
                         
                         if !nodeDictionary.keys.contains(noteXTenths) {
@@ -593,6 +615,25 @@ class MusicScanner {
                             cleffKey[number] = sign
                             
                         }
+                        
+                        if let newBeats = try? measure.nodes(forXPath: "time/beats").first?.stringValue,
+                            let cast = Double(newBeats) {
+                            beats = cast
+                        }
+                        
+                        if let newBeatType = try? measure.nodes(forXPath: "time/beat-type").first?.stringValue,
+                           let cast = Double(newBeatType) {
+                            beatType = cast
+                        }
+                        
+                        if let newDivisions = try? measure.nodes(forXPath: "divisions").first?.stringValue,
+                           let cast = Double(newDivisions) {
+                            divisions = cast
+                        }
+                        
+                        
+                        measureQuarterBeats = beats * (4 / beatType)
+                        
                         continue
                     }
                     
@@ -631,10 +672,19 @@ class MusicScanner {
                         }
                         else { // else add the current chord to songArray, clear chordArray, start a new chord with current
                             songArray.append(Chord(notes: chordArray, order: songArray.count))
+                            
+                            for note in chordArray {
+                                noteIntervals[note.midi].intervals.append(note.interval)
+                            }
+                        
                             chordArray = []
                             chordArray.append(contentsOf: nodeDictionary[sortedKeys[index]]!)
                             if (index == sortedKeys.count-1) {
                                 songArray.append(Chord(notes: chordArray, order: songArray.count))
+                                
+                                for note in chordArray {
+                                    noteIntervals[note.midi].intervals.append(note.interval)
+                                }
                             }
                         }
                     }
@@ -655,7 +705,7 @@ class MusicScanner {
                         if songArray[i].notes.first!.note == "BREAK" { repeatOverPages += 1 }
                     }
                     for _ in 0..<repeatOverPages {
-                        let backNote = Note(id: 0, midi: -1, note: "BACK", accidental: "!", octave: -1, posX: 0, posY: 0, measureMidY: 0)
+                        let backNote = Note(id: 0, midi: -1, note: "BACK", accidental: "!", octave: -1, posX: 0, posY: 0, measureMidY: 0, duration: 0, interval: Interval())
                         songArray.append(Chord(notes: [backNote], order: songArray.count))
                     }
                     for i in 0..<duplicatedChords.count {
@@ -687,7 +737,6 @@ class MusicScanner {
         for i in 0..<pdfDocument.pageCount {
             guard let page = pdfDocument.page(at: i) else { continue }
             let rect = page.bounds(for: .mediaBox)
-            let area = rect.width * rect.height
             let scale : CGFloat = getMaxAudiverisScale(height: rect.height, width: rect.width)
             scales.append(scale)
             
@@ -697,7 +746,6 @@ class MusicScanner {
     
     func getImageScale(image: URL) -> [CGFloat] {
         let image = NSImage(contentsOfFile: image.path)!
-        let area = image.size.width * image.size.height;
         let scales : [CGFloat] = [getMaxAudiverisScale(height: image.size.height, width: image.size.width)]
         return scales
     }
