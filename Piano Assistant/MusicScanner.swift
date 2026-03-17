@@ -385,6 +385,8 @@ class MusicScanner {
             
             var measureQuarterBeats : Double = 4;
             
+            var BPM : Float = 60;
+            
             for measure in measureNodes {
 
 
@@ -580,7 +582,7 @@ class MusicScanner {
                             usableMeasureWidth = (measureWidth! - noteXTenths) * tenthsToPixels
                         }
                         
-                        var distance : Double = ((noteDuration! / divisions) / measureQuarterBeats) * usableMeasureWidth
+                        let distance : Double = ((noteDuration! / divisions) / measureQuarterBeats) * usableMeasureWidth
                         
                         if noteTie == "stop" {
                             for i in 0 ..< noteTies.count {
@@ -593,11 +595,9 @@ class MusicScanner {
                             // Either it found the start node or something went wrong, either way skip this note
                             continue;
                         }
-//                        
-//                        if noteTie != "start" {
-//                            let maxDist = (measureWidth! + 2*measureOffset) * tenthsToPixels - noteX
-//                            if distance > maxDist { distance = maxDist }
-//                        }
+                        
+                        // Gives a time in seconds for a note to be played
+                        let time : Double = (noteDuration! / divisions) * Double((60/BPM))
                         
                         let noteNode = Note(
                             id: noteId,
@@ -609,9 +609,12 @@ class MusicScanner {
                             posY: noteY,
                             measureMidY: measureMid,
                             duration: noteDuration!,
-                            interval: Interval(start: noteX, end: noteX+distance, y: noteY)
+                            interval: Interval(start: noteX, end: noteX+distance, y: noteY, time: time)
                         )
                         
+                        if noteTie == "start" {
+                            noteTies.append(noteNode)
+                        }
                         
                         if !nodeDictionary.keys.contains(noteXTenths) {
                             nodeDictionary.updateValue([noteNode], forKey: noteXTenths)
@@ -679,6 +682,36 @@ class MusicScanner {
 
                         continue
                         
+                    }
+                    
+                    else if child.name == "direction" {
+                        var newBeats : Int = 0;
+                        var newBeatType : Float = 0;
+                        var dotMultiplier : Float = 1;
+                        let beatNumbers : [String: Float] = ["whole": 4, "half": 2, "quarter" : 1, "eighth": 0.5]
+                        
+                        if let beatType = try? child.nodes(forXPath: "direction-type/metronome/beat-unit").first?.stringValue {
+                            newBeatType = beatNumbers[beatType]!
+                        }
+                        
+                        if let dots = try? child.nodes(forXPath: "beat-unit-dot") {
+                            if dots.count != 0 {
+                                for i in 1..<dots.count { dotMultiplier += Float(1/(2*i)) }
+                            }
+                        }
+                        
+                        if let beats = try? child.nodes(forXPath: "direction-type/metronome/beat-unit").first?.stringValue, let cast = Int(beats) {
+                            newBeats = cast
+                        }
+                        
+                        if newBeats != 0 && newBeatType != 0 {
+                            BPM = Float(newBeats) * (newBeatType * dotMultiplier)
+                        }
+                        
+                    }
+                    
+                    else if child.name == "debug" {
+                        print("found a debug node.")
                     }
                     // for measure.children scope
                     
@@ -748,6 +781,21 @@ class MusicScanner {
                     repeatChord = 0
                     
                 }
+                
+                // Corrects every interval to make sure that intervals of the same note dont overlap visually
+                for noteInt in noteIntervals {
+                    if noteInt.intervals.count < 2 { continue; }
+                    for i in 1...noteInt.intervals.count-1 {
+                        let prev : Interval = noteInt.intervals[i-1]
+                        let cur = noteInt.intervals[i];
+                        if prev.y != cur.y { continue; }
+                        if prev.end > cur.start {
+                            prev.end = cur.start
+                        }
+                    }
+                }
+                
+                
                 measureOffset = measureOffset + measureWidth! + leftMargin!
                 
             }

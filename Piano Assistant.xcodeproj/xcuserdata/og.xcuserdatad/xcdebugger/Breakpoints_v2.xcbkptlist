@@ -142,8 +142,8 @@
             filePath = "Piano Assistant/MusicScanner.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "757"
-            endingLineNumber = "757"
+            startingLineNumber = "805"
+            endingLineNumber = "805"
             landmarkName = "parseXML(xmlURL:imagePath:repeatChord:songArray:scales:noteIntervals:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -206,8 +206,8 @@
             filePath = "Piano Assistant/MusicScanner.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "495"
-            endingLineNumber = "495"
+            startingLineNumber = "497"
+            endingLineNumber = "497"
             landmarkName = "parseXML(xmlURL:imagePath:repeatChord:songArray:scales:noteIntervals:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -222,8 +222,8 @@
             filePath = "Piano Assistant/MusicScanner.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "574"
-            endingLineNumber = "574"
+            startingLineNumber = "576"
+            endingLineNumber = "576"
             landmarkName = "parseXML(xmlURL:imagePath:repeatChord:songArray:scales:noteIntervals:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -238,8 +238,8 @@
             filePath = "Piano Assistant/MusicScanner.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "670"
-            endingLineNumber = "670"
+            startingLineNumber = "673"
+            endingLineNumber = "673"
             landmarkName = "parseXML(xmlURL:imagePath:repeatChord:songArray:scales:noteIntervals:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -254,8 +254,8 @@
             filePath = "Piano Assistant/MusicScanner.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "672"
-            endingLineNumber = "672"
+            startingLineNumber = "675"
+            endingLineNumber = "675"
             landmarkName = "parseXML(xmlURL:imagePath:repeatChord:songArray:scales:noteIntervals:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -270,8 +270,8 @@
             filePath = "Piano Assistant/MusicScanner.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "727"
-            endingLineNumber = "727"
+            startingLineNumber = "760"
+            endingLineNumber = "760"
             landmarkName = "parseXML(xmlURL:imagePath:repeatChord:songArray:scales:noteIntervals:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -286,8 +286,8 @@
             filePath = "Piano Assistant/MusicScanner.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "729"
-            endingLineNumber = "729"
+            startingLineNumber = "762"
+            endingLineNumber = "762"
             landmarkName = "parseXML(xmlURL:imagePath:repeatChord:songArray:scales:noteIntervals:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -334,8 +334,8 @@
             filePath = "Piano Assistant/MusicScanner.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "799"
-            endingLineNumber = "799"
+            startingLineNumber = "847"
+            endingLineNumber = "847"
             landmarkName = "scan(item:onlyPNG:customImport:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -366,8 +366,8 @@
             filePath = "Piano Assistant/MusicScanner.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "802"
-            endingLineNumber = "802"
+            startingLineNumber = "850"
+            endingLineNumber = "850"
             landmarkName = "scan(item:onlyPNG:customImport:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -382,8 +382,24 @@
             filePath = "Piano Assistant/MusicScanner.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "659"
-            endingLineNumber = "659"
+            startingLineNumber = "662"
+            endingLineNumber = "662"
+            landmarkName = "parseXML(xmlURL:imagePath:repeatChord:songArray:scales:noteIntervals:)"
+            landmarkType = "7">
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "885B6EED-2EBF-4140-816D-92DF2C362A57"
+            shouldBeEnabled = "No"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "Piano Assistant/MusicScanner.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "714"
+            endingLineNumber = "714"
             landmarkName = "parseXML(xmlURL:imagePath:repeatChord:songArray:scales:noteIntervals:)"
             landmarkType = "7">
          </BreakpointContent>

@@ -147,19 +147,22 @@ final class Interval {
     var end : Double = 0;
     var durationPlayed : Double = 0;
     var y : Double = 0;
+    var time : Double = 0;
     
-    init(start: Double, end: Double, durationPlayed: Double, y: Double) {
+    init(start: Double, end: Double, durationPlayed: Double, y: Double, BPM: Double) {
         self.start = start;
         self.end = end;
         self.durationPlayed = durationPlayed;
         self.y = y;
+        self.time = BPM;
     }
     
-    init(start: Double, end: Double, y: Double){
+    init(start: Double, end: Double, y: Double, time: Double){
         self.start = start;
         self.end = end;
         self.durationPlayed = 0;
         self.y = y;
+        self.time = time
     }
     
     init() {
