@@ -19,7 +19,9 @@ final class Item {
         title = n
         filePath = []
         self.songArray = []
-        self.songIntervals = Array(repeating: NoteIntervals(), count: 127 )
+        self.songIntervals = (0...127).map { index in
+            return NoteIntervals();
+        }
     }
     
     
@@ -168,12 +170,14 @@ final class Interval {
 
 @Model
 final class NoteIntervals {
-    var cursor : Int = 0;
-    var intervals : [Interval] = [];
-    var wrongIntervals : [Interval] = [];
+    var cursor : Int;
+    var intervals : [Interval];
+    var wrongIntervals : [Interval];
     
     init() {
-        
+        self.cursor = 0;
+        self.intervals = []
+        self.wrongIntervals = []
     }
     
 }

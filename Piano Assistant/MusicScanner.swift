@@ -353,6 +353,9 @@ class MusicScanner {
         var cleffKey : [Int: String] = [0:"0",1:"0",2:"0"]
         var measureSysTop : Double = 0
         
+        var noteTies : [Note] = []
+        
+        
         print(imagePath)
         let sheet = NSImage(contentsOf: imagePath)!
     
@@ -482,6 +485,9 @@ class MusicScanner {
                 
                 let measureMid = CGFloat(staffDistances[1] + 40 + distance/2) * tenthsToPixels
 
+                var usableMeasureWidth : Double = 0;
+                
+                
                 // TODO: IMPLEMENT OR DOUBLE CHECK SUPPORT FOR MORE THAN 2 STAVES
 
                 
@@ -533,7 +539,11 @@ class MusicScanner {
                                 .stringValue ?? "2"
                         )
                         
-                        let noteValue = (noteOctave + 1) * 12 + (noteStep + noteAlter!)
+                        
+                        // "start" and "stop"
+                        let noteTie = try? note.nodes(forXPath: "tie/@type").first?.stringValue ?? "no"
+                        
+                        let noteValue : Int = Int((noteOctave + 1) * 12 + (noteStep + noteAlter!))
                         
                         // Calculate absolute Y in MusicXML tenths
                         var noteY : Double = 0
@@ -565,11 +575,33 @@ class MusicScanner {
                         let noteId : Int = Int(noteX * noteY)
                         let alterConv = [-2: "bb", -1: "b", 0: "", 1: "#", 2: "x"]
                         
-                        let distance : Double = ((noteDuration! / divisions) / measureQuarterBeats) * measureWidth! * tenthsToPixels
+                        // Gets the usable width of the measure for the notes in pixels
+                        if usableMeasureWidth == 0 {
+                            usableMeasureWidth = (measureWidth! - noteXTenths) * tenthsToPixels
+                        }
+                        
+                        var distance : Double = ((noteDuration! / divisions) / measureQuarterBeats) * usableMeasureWidth
+                        
+                        if noteTie == "stop" {
+                            for i in 0 ..< noteTies.count {
+                                if noteTies[i].midi == noteValue {
+                                    noteTies[i].interval.end += distance
+                                    noteTies.remove(at: i)
+                                    break;
+                                }
+                            }
+                            // Either it found the start node or something went wrong, either way skip this note
+                            continue;
+                        }
+//                        
+//                        if noteTie != "start" {
+//                            let maxDist = (measureWidth! + 2*measureOffset) * tenthsToPixels - noteX
+//                            if distance > maxDist { distance = maxDist }
+//                        }
                         
                         let noteNode = Note(
                             id: noteId,
-                            midi: Int(noteValue),
+                            midi: noteValue,
                             note: noteLetter,
                             accidental: alterConv[Int(noteAlter!)]!,
                             octave: Int(noteOctave),
@@ -579,8 +611,6 @@ class MusicScanner {
                             duration: noteDuration!,
                             interval: Interval(start: noteX, end: noteX+distance, y: noteY)
                         )
-                        
-                        
                         
                         
                         if !nodeDictionary.keys.contains(noteXTenths) {
@@ -616,17 +646,17 @@ class MusicScanner {
                             
                         }
                         
-                        if let newBeats = try? measure.nodes(forXPath: "time/beats").first?.stringValue,
+                        if let newBeats = try? child.nodes(forXPath: "time/beats").first?.stringValue,
                             let cast = Double(newBeats) {
                             beats = cast
                         }
                         
-                        if let newBeatType = try? measure.nodes(forXPath: "time/beat-type").first?.stringValue,
+                        if let newBeatType = try? child.nodes(forXPath: "time/beat-type").first?.stringValue,
                            let cast = Double(newBeatType) {
                             beatType = cast
                         }
                         
-                        if let newDivisions = try? measure.nodes(forXPath: "divisions").first?.stringValue,
+                        if let newDivisions = try? child.nodes(forXPath: "divisions").first?.stringValue,
                            let cast = Double(newDivisions) {
                             divisions = cast
                         }
@@ -674,6 +704,7 @@ class MusicScanner {
                             songArray.append(Chord(notes: chordArray, order: songArray.count))
                             
                             for note in chordArray {
+                                let midi = note.midi
                                 noteIntervals[note.midi].intervals.append(note.interval)
                             }
                         
