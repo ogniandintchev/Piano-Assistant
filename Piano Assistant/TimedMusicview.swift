@@ -1,7 +1,7 @@
 import Foundation
 import SwiftUI
 
-struct SheetMusicView : View {
+struct TimedMusicView : View {
     
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var midi : BluetoothMIDI
@@ -49,6 +49,10 @@ struct SheetMusicView : View {
                                 ForEach(handler.current().notes) { note in
                                     let colors : [String : Color] = ["bb": .red, "b": .orange, "": .yellow, "#": .blue, "x": .purple, "!": .white]
                                     NoteHighlight(x: CGFloat(note.posX), y: CGFloat(note.posY), color: colors[note.accidental]!)
+                                    
+                                    
+                                    IntervalHighlight(x: CGFloat(note.interval.start), y: CGFloat(note.interval.y), width: note.interval.end - note.interval.start, color: .red)
+
                                     
                                 }
                                 

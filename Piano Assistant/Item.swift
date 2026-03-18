@@ -9,6 +9,7 @@ final class Item {
     
     var songArray: [Chord]
     var songIntervals : [NoteIntervals]
+    var orderedIntervals : [NoteIntervals] = []
     
     var title: String?
     
@@ -148,25 +149,47 @@ final class Interval {
     var durationPlayed : Double = 0;
     var y : Double = 0;
     var time : Double = 0;
+    var timeInSong : Double = 0;
+    var midi : Int = 0;
     
-    init(start: Double, end: Double, durationPlayed: Double, y: Double, BPM: Double) {
+    init(start: Double, end: Double, durationPlayed: Double, y: Double, BPM: Double, timeInSong: Double, midi: Int) {
+        self.start = start
+        self.end = end
+        self.durationPlayed = durationPlayed
+        self.y = y
+        self.time = BPM
+        self.timeInSong = timeInSong;
+        self.midi = midi
+    }
+    
+    init(start: Double, end: Double, durationPlayed: Double, y: Double, BPM: Double, midi: Int) {
         self.start = start;
         self.end = end;
         self.durationPlayed = durationPlayed;
         self.y = y;
         self.time = BPM;
+        self.midi = midi
     }
     
-    init(start: Double, end: Double, y: Double, time: Double){
+    init(start: Double, end: Double, y: Double, time: Double, midi : Int){
         self.start = start;
         self.end = end;
         self.durationPlayed = 0;
         self.y = y;
         self.time = time
+        self.midi = midi
+    }
+    
+    init(durationPlayed: Double) {
+        self.durationPlayed = durationPlayed
     }
     
     init() {
         
+    }
+    
+    func copy() -> Interval {
+        return Interval(start: start, end: end, durationPlayed: durationPlayed, y: y, BPM: time, timeInSong: timeInSong, midi: midi)
     }
     
 }
@@ -181,6 +204,38 @@ final class NoteIntervals {
         self.cursor = 0;
         self.intervals = []
         self.wrongIntervals = []
+    }
+    
+    init(intervals : [Interval]) {
+        self.cursor = 0;
+        self.intervals = intervals
+        self.wrongIntervals = []
+    }
+    
+    init(cursor: Int, intervals : [Interval], wrongIntervals : [Interval]) {
+        self.cursor = cursor
+        self.intervals = intervals
+        self.wrongIntervals = wrongIntervals
+    }
+    
+    func copy() -> NoteIntervals {
+        var copiedIntervals : [Interval] = []
+        var copiedWrong : [Interval] = []
+        
+        for i in self.intervals {
+            copiedIntervals.append(i.copy())
+        }
+        
+        for i in self.wrongIntervals {
+            copiedWrong.append(i.copy())
+        }
+        
+        return NoteIntervals(cursor: cursor, intervals: copiedIntervals, wrongIntervals: copiedWrong)
+                
+    }
+    
+    func current() -> Interval {
+        return intervals[cursor]
     }
     
 }

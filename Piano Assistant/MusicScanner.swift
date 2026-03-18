@@ -286,7 +286,7 @@ class MusicScanner {
             }
             
             let beforeParse : Int = parsedChords.count
-            parseXML(xmlURL: xmlPaths[i], imagePath : image, repeatChord: &repeatNum, songArray: &parsedChords, scales: scales, noteIntervals : &item.songIntervals)
+            parseXML(xmlURL: xmlPaths[i], imagePath : image, repeatChord: &repeatNum, songArray: &parsedChords, scales: scales, noteIntervals : &item.songIntervals, orderedIntervals: &item.orderedIntervals)
             
             // If no chords were added over an entire file, something went wrong and skip that image
             if beforeParse == parsedChords.count {
@@ -312,7 +312,8 @@ class MusicScanner {
     // TODO: function to write a text file with the ordered notes and details for easy transport & light storage
     
     // Function to parse xml for data (notes, positions, etc.)
-    func parseXML(xmlURL : URL, imagePath : URL, repeatChord : inout Int, songArray: inout [Chord], scales: [CGFloat], noteIntervals : inout [NoteIntervals]) {
+    func parseXML(xmlURL : URL, imagePath : URL, repeatChord : inout Int, songArray: inout [Chord], scales: [CGFloat], noteIntervals : inout [NoteIntervals], orderedIntervals : inout [NoteIntervals]) {
+        
         
         // Values are set as an offset in steps from the first key in its octave
         let letterConv : [String : Double] = ["C":0, "D":2, "E":4, "F":5, "G":7, "A":9, "B":11, "error": -1]
@@ -609,7 +610,7 @@ class MusicScanner {
                             posY: noteY,
                             measureMidY: measureMid,
                             duration: noteDuration!,
-                            interval: Interval(start: noteX, end: noteX+distance, y: noteY, time: time)
+                            interval: Interval(start: noteX, end: noteX+distance, y: noteY, time: time, midi: noteValue)
                         )
                         
                         if noteTie == "start" {
@@ -793,6 +794,17 @@ class MusicScanner {
                             prev.end = cur.start
                         }
                     }
+                }
+                
+                // This can most definitely be optimized into the Chord segmentation part, worry about that later
+                var songTime : Double = 0;
+                for chord in songArray {
+                    var arr : [Interval] = []
+                    
+                    for n in chord.notes {
+                        arr.append(n.interval)
+                    }
+                    orderedIntervals.append(NoteIntervals(intervals: arr))
                 }
                 
                 

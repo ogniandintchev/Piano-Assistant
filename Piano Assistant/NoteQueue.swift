@@ -24,30 +24,7 @@ class NoteQueue : ObservableObject {
         return current
     }
     
-    // TODO: CHANGE THIS FUNCTION SINCE IM NOT REMOVING ELEMENTS
     func reachedEnd() -> Bool { pointer == chords.count - 1 }
-    
-    // Removing works, but walking through the array with pointers is better
-//    func remove(a: Int) -> Int {
-//        /// Return 1 if the item is removed. If the queue is empty, return 0. If the item is not found return -1
-//        
-//        if q.first == nil { return 0 } // empty queue
-//        
-//        // If a is in the array then remove it from the first item
-//        if let index = q[0].notes.firstIndex(where: { $0.midi == a }) {
-//            q[0].notes.remove(at: index)
-//        }
-//        
-//        // If top array is empty then remove it
-//        if q[0].notes.isEmpty { q.remove(at: 0) }
-//        
-//        // Prevents crash on updating current if q is empty
-//        if (q.isEmpty) {
-//            current = Chord(notes: [], order:0)
-//        } else { current = q[0]}
-//        
-//        return 1
-//    }
     
     func remove(a: Int) -> Int {
         
