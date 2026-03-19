@@ -30,6 +30,7 @@ class TimedQueue {
     
     func endOfSong() -> Bool { return cursor == intervals.count }
     
+    func fullSongIntervals() -> [NoteIntervals] { return self.intervals }
     
     
 }

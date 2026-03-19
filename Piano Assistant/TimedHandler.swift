@@ -4,15 +4,13 @@ import QuartzCore
 
 // Current implementation edits a complete copy of the saved songIntervals
 // Currently edits the duration played and wrong intervals and their duration played as notes are played
-// At the end of playSong(), iterate through all intervals, correct and incorrect, to get totals of the two
-// I dont think playSong() is going to work as expected, gonna have to be asynchronus
-// displayX NEEDS to be set via setDisplayPointer() so displayX updates in accordance to the UI
+
+// In the view, use a TimeView, and call update on a consistent clock. Pass in displayX at that moment and compute
 
 class TimedHandler : ObservableObject {
     var queueObject : TimedQueue
     var startTime : Double = CACurrentMediaTime()
     var current : [Interval] = [];
-    var displayX : Double = 0;
     var currentPressed : [Int: Double] = [:] // MIDI : Start time
     var songIntervals : [NoteIntervals] = []
     
@@ -21,30 +19,45 @@ class TimedHandler : ObservableObject {
         queueObject = TimedQueue(intervals: queue)
     }
     
-    func setDisplayPointer(displayX : inout Double ) { self.displayX = displayX }
-    
     func newStart() { startTime = CACurrentMediaTime() }
     
     func setSongIntervals(songIntervals: inout [NoteIntervals]) { self.songIntervals = songIntervals }
     
-    func playSong() {
+    func playSong(displayX: Double) {
         
-        while !queueObject.endOfSong() {
-            if displayX >= queueObject.currentX() {
-                current = current + queueObject.popAndWalk()!.intervals
+        if displayX >= queueObject.currentX() {
+            current = current + queueObject.popAndWalk()!.intervals
+        }
+        
+        current.removeAll {$0.end < displayX }
+        
+    }
+    
+    // This is super unoptimized with terible O(), but this can be updated later to also provide data to display
+    // Like exact positions of wrong intervals, overlays of correct intervals, etc. to make it justified
+    func update() {
+        
+        let finalIntervals = queueObject.fullSongIntervals()
+        var totalSongTime : Double = 0;
+        var totalWrongTime : Double = 0;
+        var totalCorrectTime : Double = 0;
+        
+        
+        for noteInterval in finalIntervals {
+            for interval in noteInterval.intervals {
+                totalSongTime += interval.time
+                totalCorrectTime += interval.durationPlayed
             }
             
-            for i in 0..<current.count {
-                if current[i].end < displayX {
-                    current.remove(at: i)
-                }
-                
+            for wrong in noteInterval.wrongIntervals {
+                totalWrongTime += wrong.durationPlayed
             }
             
         }
         
+        let finalScore = (totalCorrectTime - totalWrongTime) / totalSongTime
         
-        
+        print("Final score is : \(finalScore)")
         
     }
     
