@@ -7,37 +7,55 @@ import QuartzCore
 
 // In the view, use a TimeView, and call update on a consistent clock. Pass in displayX at that moment and compute
 
+// Check duration handling of Tuplets
+
 class TimedHandler : ObservableObject {
-    var queueObject : TimedQueue
+    var timedQ : TimedQueue
     var startTime : Double = CACurrentMediaTime()
-    var current : [Interval] = [];
+    var currentIntervals : [Interval] = [];
+    var currentNotes : Chord = Chord(notes: [], order: 0);
     var currentPressed : [Int: Double] = [:] // MIDI : Start time
     var songIntervals : [NoteIntervals] = []
+    var noteQ : NoteQueue;
     
     
-    init(queue: [NoteIntervals]){
-        queueObject = TimedQueue(intervals: queue)
+    init(queue: [NoteIntervals], songNotes : [Chord]){
+        timedQ = TimedQueue(intervals: queue)
+        noteQ = NoteQueue(queue: songNotes)
+        
     }
     
     func newStart() { startTime = CACurrentMediaTime() }
     
     func setSongIntervals(songIntervals: inout [NoteIntervals]) { self.songIntervals = songIntervals }
     
-    func playSong(displayX: Double) {
+    func newSong(item: Item) {
+        self.songIntervals = item.songIntervals
+        self.noteQ = NoteQueue(queue: item.songArray)
+        self.timedQ = TimedQueue(intervals: item.songIntervals)
         
-        if displayX >= queueObject.currentX() {
-            current = current + queueObject.popAndWalk()!.intervals
+        self.currentIntervals = timedQ.popAndWalk()!.intervals
+        self.currentNotes = noteQ.current
+        
+    }
+    
+    func update(displayX: Double) {
+        
+        if displayX >= timedQ.currentX() {
+            currentIntervals = currentIntervals + timedQ.popAndWalk()!.intervals
         }
         
-        current.removeAll {$0.end < displayX }
+        currentIntervals.removeAll {$0.end < displayX }
+        
+        currentNotes = noteQ.current
         
     }
     
     // This is super unoptimized with terible O(), but this can be updated later to also provide data to display
     // Like exact positions of wrong intervals, overlays of correct intervals, etc. to make it justified
-    func update() {
+    func finishSong() {
         
-        let finalIntervals = queueObject.fullSongIntervals()
+        let finalIntervals = timedQ.fullSongIntervals()
         var totalSongTime : Double = 0;
         var totalWrongTime : Double = 0;
         var totalCorrectTime : Double = 0;
@@ -82,6 +100,7 @@ class TimedHandler : ObservableObject {
         
         if (noteType == NoteType.ON) { // If the input is a key being pressed
             currentPressed[bytes[1]] = CACurrentMediaTime()
+            _ = noteQ.remove(a: bytes[1])
         }
         
         if (noteType == NoteType.OFF) {
@@ -91,7 +110,7 @@ class TimedHandler : ObservableObject {
             let durationPlayed = currentDur - CACurrentMediaTime() // Start press - end press
             
             var interval : Interval? = nil
-            for i in current {
+            for i in currentIntervals {
                 if i.midi == bytes[1] {
                     interval = i
                 }

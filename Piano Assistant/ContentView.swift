@@ -5,6 +5,8 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var midi : BluetoothMIDI
     @EnvironmentObject private var handler : SongHandler
+    @EnvironmentObject private var timedHandler : TimedHandler
+    
     private var scanner : MusicScanner
     
     @Query private var items: [Item]
@@ -14,7 +16,7 @@ struct ContentView: View {
     @State private var songName : String = ""
     
     @State private var showSheetView = false
-    
+    @State private var showTimedView = false
     
     @State private var typeAlert : Bool = false
     
@@ -37,6 +39,11 @@ struct ContentView: View {
             if showSheetView {
                 SheetMusicView(currentItem: $currentItem, showSheetView: $showSheetView)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+            else if showTimedView {
+                TimedMusicView(currentItem: $currentItem, showTimedView: $showTimedView)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                
             } else {
                 NavigationSplitView {
                     List {
@@ -145,6 +152,13 @@ struct ContentView: View {
                                             handler.newSong(new: item.songArray)
                                             currentItem = item
                                             showSheetView = true
+                                        }
+                                        
+                                        Button("Play Timed Song") {
+                                            item.songArray.sort()
+                                            timedHandler.newSong(item: item)
+                                            currentItem = item
+                                            showTimedView = true
                                         }
                                         
                                         Button("Delete Item") {

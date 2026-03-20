@@ -10,6 +10,7 @@ final class Item {
     var songArray: [Chord]
     var songIntervals : [NoteIntervals]
     var orderedIntervals : [NoteIntervals] = []
+    var speedIntervals : [Interval] = []
     
     var title: String?
     
@@ -151,23 +152,24 @@ final class Interval {
     var time : Double = 0;
     var timeInSong : Double = 0;
     var midi : Int = 0;
+    var note : Note?;
     
-    init(start: Double, end: Double, durationPlayed: Double, y: Double, BPM: Double, timeInSong: Double, midi: Int) {
+    init(start: Double, end: Double, durationPlayed: Double, y: Double, time: Double, timeInSong: Double, midi: Int) {
         self.start = start
         self.end = end
         self.durationPlayed = durationPlayed
         self.y = y
-        self.time = BPM
+        self.time = time
         self.timeInSong = timeInSong;
         self.midi = midi
     }
     
-    init(start: Double, end: Double, durationPlayed: Double, y: Double, BPM: Double, midi: Int) {
+    init(start: Double, end: Double, durationPlayed: Double, y: Double, time: Double, midi: Int) {
         self.start = start;
         self.end = end;
         self.durationPlayed = durationPlayed;
         self.y = y;
-        self.time = BPM;
+        self.time = time;
         self.midi = midi
     }
     
@@ -189,7 +191,7 @@ final class Interval {
     }
     
     func copy() -> Interval {
-        return Interval(start: start, end: end, durationPlayed: durationPlayed, y: y, BPM: time, timeInSong: timeInSong, midi: midi)
+        return Interval(start: start, end: end, durationPlayed: durationPlayed, y: y, time: time, timeInSong: timeInSong, midi: midi)
     }
     
 }

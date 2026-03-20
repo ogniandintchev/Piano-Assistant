@@ -286,7 +286,7 @@ class MusicScanner {
             }
             
             let beforeParse : Int = parsedChords.count
-            parseXML(xmlURL: xmlPaths[i], imagePath : image, repeatChord: &repeatNum, songArray: &parsedChords, scales: scales, noteIntervals : &item.songIntervals, orderedIntervals: &item.orderedIntervals)
+            parseXML(xmlURL: xmlPaths[i], imagePath : image, repeatChord: &repeatNum, songArray: &parsedChords, scales: scales, noteIntervals : &item.songIntervals, orderedIntervals: &item.orderedIntervals, speedIntervals: &item.speedIntervals)
             
             // If no chords were added over an entire file, something went wrong and skip that image
             if beforeParse == parsedChords.count {
@@ -312,7 +312,7 @@ class MusicScanner {
     // TODO: function to write a text file with the ordered notes and details for easy transport & light storage
     
     // Function to parse xml for data (notes, positions, etc.)
-    func parseXML(xmlURL : URL, imagePath : URL, repeatChord : inout Int, songArray: inout [Chord], scales: [CGFloat], noteIntervals : inout [NoteIntervals], orderedIntervals : inout [NoteIntervals]) {
+    func parseXML(xmlURL : URL, imagePath : URL, repeatChord : inout Int, songArray: inout [Chord], scales: [CGFloat], noteIntervals : inout [NoteIntervals], orderedIntervals : inout [NoteIntervals], speedIntervals : inout [Interval]) {
         
         
         // Values are set as an offset in steps from the first key in its octave
@@ -612,6 +612,7 @@ class MusicScanner {
                             duration: noteDuration!,
                             interval: Interval(start: noteX, end: noteX+distance, y: noteY, time: time, midi: noteValue)
                         )
+                        noteNode.interval.note = noteNode
                         
                         if noteTie == "start" {
                             noteTies.append(noteNode)
@@ -711,6 +712,7 @@ class MusicScanner {
                         
                     }
                     
+                    // Add a <debug></debug> for breakpoints to measure behavior of specific parts of XML
                     else if child.name == "debug" {
                         print("found a debug node.")
                     }
@@ -738,7 +740,6 @@ class MusicScanner {
                             songArray.append(Chord(notes: chordArray, order: songArray.count))
                             
                             for note in chordArray {
-                                let midi = note.midi
                                 noteIntervals[note.midi].intervals.append(note.interval)
                             }
                         
@@ -797,16 +798,39 @@ class MusicScanner {
                 }
                 
                 // This can most definitely be optimized into the Chord segmentation part, worry about that later
-                var songTime : Double = 0;
                 for chord in songArray {
                     var arr : [Interval] = []
-                    
                     for n in chord.notes {
+                        
                         arr.append(n.interval)
+                        
                     }
                     orderedIntervals.append(NoteIntervals(intervals: arr))
                 }
                 
+                // Speed interval - an array of distances and their corresponding times to cover those distances
+                var slowestInterval : Interval = Interval(start: 0, end: 0, durationPlayed: 0, y: 0, time: 0, timeInSong: 0, midi: -1);
+                for ni in orderedIntervals {
+                    for interval in ni.intervals {
+                        if slowestInterval.midi == -1 { slowestInterval = interval; continue; }
+                        
+                        // Pixels per second
+                        let slowest = (slowestInterval.end - slowestInterval.start) / slowestInterval.time
+                        let current = (interval.end - interval.start) / interval.time
+                        
+                        // If the current interval overlaps with the slowest
+                        if slowestInterval.end > interval.start {
+                            if slowest > current { // If cursor has to move slower over distance of current
+                                
+                                // The time elapsed of the slowest interval before it is replaced by a slower one
+                                let timeOfSlowest = ((interval.start - slowestInterval.start) / (slowestInterval.end - slowestInterval.start)) * slowestInterval.time
+                                
+                                speedIntervals.append(Interval(start: slowestInterval.start, end: interval.start, y: slowestInterval.y, time: timeOfSlowest, midi: 0))
+                                
+                            }
+                        }
+                    }
+                }
                 
                 measureOffset = measureOffset + measureWidth! + leftMargin!
                 

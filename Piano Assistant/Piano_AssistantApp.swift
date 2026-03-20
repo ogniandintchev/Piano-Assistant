@@ -7,10 +7,9 @@ struct Piano_AssistantApp: App {
     var testQueue : [Chord] = []
     let testNotes = [[21,22,23],[24,25,26],[27]]
 
-    
-    
     let test : NoteQueue
     private var handler : SongHandler
+    private var timedHandler : TimedHandler
     @ObservedObject private var midi : BluetoothMIDI
     
     
@@ -28,6 +27,7 @@ struct Piano_AssistantApp: App {
         test = NoteQueue(queue: testQueue)
         handler = SongHandler(queue: test)
         midi = BluetoothMIDI(handler)
+        timedHandler = TimedHandler(queue: [NoteIntervals(intervals:[Interval()])], songNotes: testQueue)
 
     }
     
@@ -53,6 +53,7 @@ struct Piano_AssistantApp: App {
             ContentView()
                 .environmentObject(midi)
                 .environmentObject(handler)
+                .environmentObject(timedHandler)
         }
         .modelContainer(sharedModelContainer)
     }
