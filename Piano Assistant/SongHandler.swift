@@ -1,7 +1,7 @@
 import SwiftUI
 import Combine
 
-class SongHandler : ObservableObject, Handler {
+class SongHandler : ObservableObject {
     
     var queueObject : NoteQueue
     var lastNotePressed : Int = 0
@@ -104,13 +104,6 @@ class SongHandler : ObservableObject, Handler {
         }
         
     }
-    
-}
-
-
-protocol Handler: ObservableObject {
-    
-    func onInput(bytes: [Int])
     
 }
 

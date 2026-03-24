@@ -26,7 +26,29 @@ class TimedQueue {
         return intervals[cursor-1];
     }
     
-    func currentX() -> Double { return intervals[cursor].intervals[0].start }
+    func updateCurrent(displayX: Double) -> [Interval] {
+        var new : [Interval] = []
+        
+        for interval in self.intervals[cursor].intervals {
+            if displayX < interval.end {
+                new.append(interval)
+            }
+        }
+        
+        return new
+    }
+    
+    func currentX() -> Double { print(intervals.count); return intervals[cursor].intervals[0].start }
+    
+    func nextX() -> Double {
+        if cursor < intervals.count-1 {
+            print(intervals[cursor+1].intervals.count);
+            return intervals[cursor+1].intervals[0].start
+        } else {
+            return -1
+        }
+        
+    }
     
     func endOfSong() -> Bool { return cursor == intervals.count }
     

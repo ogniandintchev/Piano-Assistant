@@ -295,7 +295,7 @@ class MusicScanner {
             }
             
             if i != xmlPaths.count-1 {
-                let breakNote = Note(id: 0, midi: -1, note: "BREAK", accidental: "!", octave: -1, posX: 0, posY: 0, measureMidY: 0, duration: 0, interval: Interval())
+                let breakNote = Note(id: 0, midi: -1, note: "BREAK", accidental: "!", octave: -1, posX: 0, posY: 0, measureMidY: 0, duration: 0, interval: Interval(), measureNumber: 0, staffNumber: 0)
                 let pageBreak = Chord(notes: [breakNote], order: parsedChords.count)
                 parsedChords.append(pageBreak)
             }
@@ -366,6 +366,8 @@ class MusicScanner {
         
         var distance : Double = 66
         
+        var measureCount = 0;
+        
         for part in partNodes {
 
             guard let measureNodes = try? part.nodes(forXPath: "measure")
@@ -390,7 +392,7 @@ class MusicScanner {
             
             for measure in measureNodes {
 
-
+                measureCount+=1
                 // Create a dictionary of node arrays to partition nodes via x value
                 // nodes are only put in the dictionary for their measure, so seperation for chords is already done
                 var nodeDictionary : [Double: [Note]] = [:]
@@ -429,7 +431,9 @@ class MusicScanner {
                         posY: 0,
                         measureMidY: 0,
                         duration: 0,
-                        interval: Interval()
+                        interval: Interval(),
+                        measureNumber: 0,
+                        staffNumber: 0
                     )
                     
                     let pageBreak = Chord(notes: [breakNote], order: songArray.count)
@@ -610,7 +614,9 @@ class MusicScanner {
                             posY: noteY,
                             measureMidY: measureMid,
                             duration: noteDuration!,
-                            interval: Interval(start: noteX, end: noteX+distance, y: noteY, time: time, midi: noteValue)
+                            interval: Interval(start: noteX, end: noteX+distance, y: noteY, time: time, midi: noteValue),
+                            measureNumber: measureCount,
+                            staffNumber: noteStaff ?? 1
                         )
                         noteNode.interval.note = noteNode
                         
@@ -771,7 +777,7 @@ class MusicScanner {
                         if songArray[i].notes.first!.note == "BREAK" { repeatOverPages += 1 }
                     }
                     for _ in 0..<repeatOverPages {
-                        let backNote = Note(id: 0, midi: -1, note: "BACK", accidental: "!", octave: -1, posX: 0, posY: 0, measureMidY: 0, duration: 0, interval: Interval())
+                        let backNote = Note(id: 0, midi: -1, note: "BACK", accidental: "!", octave: -1, posX: 0, posY: 0, measureMidY: 0, duration: 0, interval: Interval(),measureNumber: 0, staffNumber: 0)
                         songArray.append(Chord(notes: [backNote], order: songArray.count))
                     }
                     for i in 0..<duplicatedChords.count {
@@ -784,58 +790,118 @@ class MusicScanner {
                     
                 }
                 
-                // Corrects every interval to make sure that intervals of the same note dont overlap visually
-                for noteInt in noteIntervals {
-                    if noteInt.intervals.count < 2 { continue; }
-                    for i in 1...noteInt.intervals.count-1 {
-                        let prev : Interval = noteInt.intervals[i-1]
-                        let cur = noteInt.intervals[i];
-                        if prev.y != cur.y { continue; }
-                        if prev.end > cur.start {
-                            prev.end = cur.start
-                        }
-                    }
-                }
                 
-                // This can most definitely be optimized into the Chord segmentation part, worry about that later
-                for chord in songArray {
-                    var arr : [Interval] = []
-                    for n in chord.notes {
-                        
-                        arr.append(n.interval)
-                        
-                    }
-                    orderedIntervals.append(NoteIntervals(intervals: arr))
-                }
-                
-                // Speed interval - an array of distances and their corresponding times to cover those distances
-                var slowestInterval : Interval = Interval(start: 0, end: 0, durationPlayed: 0, y: 0, time: 0, timeInSong: 0, midi: -1);
-                for ni in orderedIntervals {
-                    for interval in ni.intervals {
-                        if slowestInterval.midi == -1 { slowestInterval = interval; continue; }
-                        
-                        // Pixels per second
-                        let slowest = (slowestInterval.end - slowestInterval.start) / slowestInterval.time
-                        let current = (interval.end - interval.start) / interval.time
-                        
-                        // If the current interval overlaps with the slowest
-                        if slowestInterval.end > interval.start {
-                            if slowest > current { // If cursor has to move slower over distance of current
-                                
-                                // The time elapsed of the slowest interval before it is replaced by a slower one
-                                let timeOfSlowest = ((interval.start - slowestInterval.start) / (slowestInterval.end - slowestInterval.start)) * slowestInterval.time
-                                
-                                speedIntervals.append(Interval(start: slowestInterval.start, end: interval.start, y: slowestInterval.y, time: timeOfSlowest, midi: 0))
-                                
-                            }
-                        }
-                    }
-                }
                 
                 measureOffset = measureOffset + measureWidth! + leftMargin!
                 
             }
             // part scope
+        }
+        
+        // Corrects every interval to make sure that intervals of the same note dont overlap visually
+        for noteInt in noteIntervals {
+            if noteInt.intervals.count < 2 { continue; }
+            for i in 1...noteInt.intervals.count-1 {
+                let prev : Interval = noteInt.intervals[i-1]
+                let cur = noteInt.intervals[i];
+                if prev.y != cur.y { continue; }
+                if prev.end > cur.start {
+                    prev.end = cur.start
+                }
+            }
+        }
+        
+        // This can most definitely be optimized into the Chord segmentation part, worry about that later
+        print("Song array length : \(songArray.count)")
+        for chord in songArray {
+            var arr : [Interval] = []
+            
+            for n in chord.notes {
+                if n.note == "BREAK" || n.note == "BACK" { continue }
+                arr.append(n.interval.copy())
+                
+            }
+            orderedIntervals.append(NoteIntervals(intervals: arr, order: orderedIntervals.count))
+        }
+        print("Interval array length : \(orderedIntervals.count)")
+        // Speed interval - an array of distances and their corresponding times to cover those distances
+        var slowestInterval : Interval = Interval(start: 0, end: 0, durationPlayed: 0, y: 0, time: 0, timeInSong: 0, midi: -1);
+        
+        var i = 0;
+        for ni in orderedIntervals {
+            i+=1;
+            if i == 22 {
+                print("Debug here")
+            }
+            for interval in ni.intervals {
+                if slowestInterval.midi == -1 { slowestInterval = interval; continue; }
+                if interval.note == nil { continue }
+                let currentNote : String? = interval.note?.note
+                let slowestNote : String? = slowestInterval.note?.note
+                
+                
+                // Pixels per second
+                let slowest = (slowestInterval.end - slowestInterval.start) / slowestInterval.time
+                let current = (interval.end - interval.start) / interval.time
+                
+                // If the current interval fully overlaps with the slowest
+                if slowestInterval.end > interval.end && slowestInterval.start < interval.start {
+                    if slowest > current { // If cursor has to move slower over distance of current
+                        
+                        // The time elapsed of the slowest interval before it is replaced by a slower one
+                        let timeOfSlowest = ((interval.start - slowestInterval.start) / (slowestInterval.end - slowestInterval.start)) * slowestInterval.time
+                        
+                        speedIntervals.append(Interval(start: slowestInterval.start, end: interval.start, y: slowestInterval.note!.posY, time: timeOfSlowest, midi: 0))
+                        speedIntervals[speedIntervals.count-1].order = speedIntervals.count
+
+                        
+                        slowestInterval = interval
+                        
+                    }
+                }
+                // Slowest interval partially overlaps with the current interval
+                else if slowestInterval.end > interval.start && slowestInterval.end < interval.end {
+                    if slowest < current { // If the slowest is slower than the current
+                        speedIntervals.append(slowestInterval.copy())
+                        speedIntervals[speedIntervals.count-1].order = speedIntervals.count
+                        let new = interval.copy()
+                        new.start = slowestInterval.end
+                        slowestInterval = new
+                    }
+                    
+                    else if slowest >= current { // If the current is slower than the slowest
+                        let timeOfSlowest = ((interval.start - slowestInterval.start) / (slowestInterval.end - slowestInterval.start)) * slowestInterval.time
+                        
+                        speedIntervals.append(Interval(start: slowestInterval.start, end: interval.start, y: slowestInterval.y, time: timeOfSlowest, midi: 0))
+                        speedIntervals[speedIntervals.count-1].order = speedIntervals.count
+
+                        slowestInterval = interval
+                    }
+                    
+                }
+                // If the slowest interval has been passed
+                else if slowestInterval.end <= interval.start {
+                    speedIntervals.append(slowestInterval.copy())
+                    speedIntervals[speedIntervals.count-1].order = speedIntervals.count
+                    slowestInterval = interval.copy()
+                }
+                
+                
+                // ADD CASES FOR IF THE NOTE STARTS SLIGHTLY BEFORE OR IS COMPLETELY BEFORE CURRENT SLOWEST
+                
+                // Current comes before slowest and is in different measures, meaning current is on a new line
+                else if slowestInterval.end > interval.end && interval.note!.measureNumber != slowestInterval.note!.measureNumber {
+                    
+                    speedIntervals.append(slowestInterval.copy())
+                    speedIntervals[speedIntervals.count-1].order = speedIntervals.count
+                    slowestInterval = interval.copy()
+                    
+                }
+                
+                // If the current comes partially before slowest
+                //      if current is slower, dont append slowest and only switch them
+                //          if it comes before and is slower, this prevents potentially negative length interval
+            }
         }
         // after all for loops
         
@@ -869,6 +935,8 @@ class MusicScanner {
         let area = height * width
         return CGFloat(20000000/area)
     }
+    
+
     
     func scan(item: Item, onlyPNG : Bool = false, customImport : Bool = false) async {
         

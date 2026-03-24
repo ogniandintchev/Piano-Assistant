@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import QuartzCore
 
 struct TimedMusicView : View {
     
@@ -20,7 +21,9 @@ struct TimedMusicView : View {
     
     @State private var zoomScale: CGFloat = 1.0
     @State private var lastZoomScale: CGFloat = 1.0
-    
+    @State private var startDate : Date = Date()
+    @State private var displayX : Double = 0;
+    @State private var now : Double = CACurrentMediaTime();
     
     var body: some View {
         VStack {
@@ -46,7 +49,12 @@ struct TimedMusicView : View {
                                 ForEach(timedHandler.currentIntervals) { interval in
                                     let colors : [String : Color] = ["bb": .red, "b": .orange, "": .yellow, "#": .blue, "x": .purple, "!": .white]
                                     
-                                    IntervalHighlight(x: CGFloat(interval.start), y: CGFloat(interval.y), width: interval.end - interval.start, color: .red)
+                                    IntervalHighlight(
+                                        x: CGFloat(interval.start),
+                                        y: CGFloat(interval.y),
+                                        width: interval.end - interval.start,
+                                        color: colors[interval.note!.accidental] ?? .orange
+                                    )
 
                                 }
                                 
@@ -54,13 +62,25 @@ struct TimedMusicView : View {
                                 // if currentIntervals IS 0
                             }
                             
+                            //printMessage(m: "\n")
                             
-                            ForEach (0..<10) { i in
-                                let interval : Interval = currentItem.speedIntervals[i];
+                            ForEach (0..<timedHandler.count) { i in
+                                
+                                let interval : Interval = timedHandler.speedIntervals.sorted()[i];
                                 
                                 IntervalHighlight(x: CGFloat(interval.start), y: CGFloat(interval.y), width: interval.end - interval.start, color: .green)
                                 
-                                
+                                //printMessage(m: "#\(i): Interval X, \(interval.start), Interval Y, \(interval.y)")
+                            
+                            }
+                            
+                            //printMessage(m: "\n")
+                            
+                            TimelineView(.animation) { context in
+                                timedHandler.getCurrentMediaTime(time: &now)
+                            }
+                            .onChange(of: now) {
+                                displayX += timedHandler.update(x: displayX, time: now)
                             }
                             
                         }
@@ -119,6 +139,7 @@ struct TimedMusicView : View {
                 
                 loadedImages = true
                 
+                timedHandler.update(x: displayX, time: now)
                 
             }
         }

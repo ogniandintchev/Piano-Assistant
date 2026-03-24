@@ -74,8 +74,10 @@ final class Note : CustomStringConvertible, Identifiable, Equatable {
     var measureMidY : Double
     var duration : Double
     var interval : Interval;
+    var measureNumber : Int;
+    var staffNumber : Int;
     
-    init(id: Int, midi: Int, note: String, accidental: String, octave: Int, posX: Double, posY: Double, measureMidY: Double, duration : Double, interval: Interval) {
+    init(id: Int, midi: Int, note: String, accidental: String, octave: Int, posX: Double, posY: Double, measureMidY: Double, duration : Double, interval: Interval, measureNumber: Int, staffNumber: Int) {
         self.id = id
         self.midi = midi
         self.note = note
@@ -86,10 +88,12 @@ final class Note : CustomStringConvertible, Identifiable, Equatable {
         self.measureMidY = measureMidY
         self.duration = duration
         self.interval = interval
+        self.measureNumber = measureNumber
+        self.staffNumber = staffNumber
     }
     
     public func copy() -> Note {
-        return Note(id: id, midi: midi, note: note, accidental: accidental, octave: octave, posX: posX, posY: posY, measureMidY: measureMidY, duration: duration, interval: interval)
+        return Note(id: id, midi: midi, note: note, accidental: accidental, octave: octave, posX: posX, posY: posY, measureMidY: measureMidY, duration: duration, interval: interval, measureNumber: measureNumber, staffNumber: staffNumber)
     }
     
     static func == (lhs: Note, rhs: Note) -> Bool {
@@ -144,7 +148,7 @@ final class Chord : CustomStringConvertible, Comparable, CustomDebugStringConver
 }
 
 @Model
-final class Interval {
+final class Interval : Comparable {
     var start : Double = 0;
     var end : Double = 0;
     var durationPlayed : Double = 0;
@@ -153,6 +157,18 @@ final class Interval {
     var timeInSong : Double = 0;
     var midi : Int = 0;
     var note : Note?;
+    var order : Int?;
+    
+    init(start: Double, end: Double, durationPlayed: Double, y: Double, time: Double, timeInSong: Double, midi: Int, note: Note? = nil) {
+        self.start = start
+        self.end = end
+        self.durationPlayed = durationPlayed
+        self.y = y
+        self.time = time
+        self.timeInSong = timeInSong;
+        self.midi = midi
+        self.note = note
+    }
     
     init(start: Double, end: Double, durationPlayed: Double, y: Double, time: Double, timeInSong: Double, midi: Int) {
         self.start = start
@@ -191,33 +207,44 @@ final class Interval {
     }
     
     func copy() -> Interval {
-        return Interval(start: start, end: end, durationPlayed: durationPlayed, y: y, time: time, timeInSong: timeInSong, midi: midi)
+        return Interval(start: start, end: end, durationPlayed: durationPlayed, y: y, time: time, timeInSong: timeInSong, midi: midi, note: note)
+    }
+    
+    static func < (lhs: Interval, rhs: Interval) -> Bool {
+        let l : Int;
+        if lhs.order == nil || rhs.order == nil { return false }
+        
+        return lhs.order! < rhs.order!
     }
     
 }
 
 @Model
-final class NoteIntervals {
+final class NoteIntervals : Comparable {
     var cursor : Int;
     var intervals : [Interval];
     var wrongIntervals : [Interval];
+    var order : Int;
     
     init() {
         self.cursor = 0;
         self.intervals = []
         self.wrongIntervals = []
+        self.order = 0;
     }
     
-    init(intervals : [Interval]) {
+    init(intervals : [Interval], order: Int) {
         self.cursor = 0;
         self.intervals = intervals
         self.wrongIntervals = []
+        self.order = order;
     }
     
-    init(cursor: Int, intervals : [Interval], wrongIntervals : [Interval]) {
+    init(cursor: Int, intervals : [Interval], wrongIntervals : [Interval], order: Int) {
         self.cursor = cursor
         self.intervals = intervals
         self.wrongIntervals = wrongIntervals
+        self.order = order
     }
     
     func copy() -> NoteIntervals {
@@ -232,12 +259,16 @@ final class NoteIntervals {
             copiedWrong.append(i.copy())
         }
         
-        return NoteIntervals(cursor: cursor, intervals: copiedIntervals, wrongIntervals: copiedWrong)
+        return NoteIntervals(cursor: cursor, intervals: copiedIntervals, wrongIntervals: copiedWrong, order: order)
                 
     }
     
     func current() -> Interval {
         return intervals[cursor]
+    }
+    
+    static func < (lhs: NoteIntervals, rhs: NoteIntervals) -> Bool {
+        return lhs.order < rhs.order
     }
     
 }

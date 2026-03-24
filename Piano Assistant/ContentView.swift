@@ -156,6 +156,9 @@ struct ContentView: View {
                                         
                                         Button("Play Timed Song") {
                                             item.songArray.sort()
+                                            item.songIntervals.sort()
+                                            item.orderedIntervals.sort()
+                                            item.speedIntervals.sort()
                                             timedHandler.newSong(item: item)
                                             currentItem = item
                                             showTimedView = true

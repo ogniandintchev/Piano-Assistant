@@ -9,14 +9,41 @@ import QuartzCore
 
 // Check duration handling of Tuplets
 
-class TimedHandler : ObservableObject {
+// Some spaces are missing a timing interval, they are either WAYYY shorter or do not exist at all
+// This might tie into the logic for when an interval needs to be replaced? Might have to go back in the loop to
+// make sure it itterates over everything or something idk fiddle around with that stuff
+
+// Item has 4 arrays
+// songArray - [Chord], houses all the chords to be played in order
+// songIntervals - [NoteIntervals], size of 128, each index for each midi input, used to do correct/incorrect
+// orderedIntervals - [NoteIntervals], basically songArray casted to [NoteIntervals], used for displaying current
+// speedIntervals - [Interval], array of speeds for the cursor to move over on the page
+
+
+// noteQ - songArray, same as other handler, a queue of all the notes to play in order
+// timedQ - orderedIntervals, array of Intervals to be played in order
+//
+
+// SWIFT REORDERS ARRAYS THAT ARE FROM PERSISTENT DATA!
+// Copying things from persistent data is not only necessary to prevent editing the original data, but also makes
+// sure that whatever swift memory shanigans is going on isn't propogated into runtime logic
+
+// Current implementation will break for slurs that go over multiple lines, fix this at some point
+
+class TimedHandler : ObservableObject, Observable {
     var timedQ : TimedQueue
     var startTime : Double = CACurrentMediaTime()
+    var lastFrame : Double = CACurrentMediaTime()
+    
+    
     var currentIntervals : [Interval] = [];
     var currentNotes : Chord = Chord(notes: [], order: 0);
     var currentPressed : [Int: Double] = [:] // MIDI : Start time
     var songIntervals : [NoteIntervals] = []
+    var speedIntervals : [Interval] = []
+    var speedCursor : Int = 0;
     var noteQ : NoteQueue;
+    var count : Int = 0;
     
     
     init(queue: [NoteIntervals], songNotes : [Chord]){
@@ -27,27 +54,51 @@ class TimedHandler : ObservableObject {
     
     func newStart() { startTime = CACurrentMediaTime() }
     
+    
     func setSongIntervals(songIntervals: inout [NoteIntervals]) { self.songIntervals = songIntervals }
     
     func newSong(item: Item) {
         self.songIntervals = item.songIntervals
         self.noteQ = NoteQueue(queue: item.songArray)
-        self.timedQ = TimedQueue(intervals: item.songIntervals)
+        self.timedQ = TimedQueue(intervals: item.orderedIntervals)
         
         self.currentIntervals = timedQ.popAndWalk()!.intervals
+        
         self.currentNotes = noteQ.current
+    
+        for interval in item.speedIntervals {
+            self.speedIntervals.append(interval.copy())
+        }
+        self.count = self.speedIntervals.count-1
         
     }
     
-    func update(displayX: Double) {
+    func update(x: Double, time: Double) -> Double {
+        // THIS FUNCTION WILL RETURN THE CHANGE IN X NEEDED FOR THE CURSOR SINCE THE LAST FRAME
+        // ADD A VARIABLE TO TRACK WHEN THE LAST FRAME WAS
         
-        if displayX >= timedQ.currentX() {
-            currentIntervals = currentIntervals + timedQ.popAndWalk()!.intervals
+        
+        // If the current display X has completely passed an interval, remove it
+        currentIntervals.removeAll {$0.end < x }
+        
+        // If the current display X is over a current interval, it must stay in current
+        
+        // If the display X has crossed into a new interval, add it to current
+        if x > timedQ.nextX() {
+            let next = timedQ.popAndWalk()
+            if next != nil { currentIntervals += next!.intervals }
+            else {
+                // End of song or something went majorly wrong
+            }
         }
         
-        currentIntervals.removeAll {$0.end < displayX }
+        // Calculate change in X based on current speedInterval,
+        
+        
         
         currentNotes = noteQ.current
+        
+        return 5;
         
     }
     
@@ -140,6 +191,30 @@ class TimedHandler : ObservableObject {
             
         }
         
+    }
+    
+    func getCurrentMediaTime(time: inout Double) -> EmptyView {
+        let temp = CACurrentMediaTime()
+        time = temp
+        lastFrame = temp
+        return EmptyView()
+    }
+    
+    
+    
+    
+    
+}
+
+struct printMessage : View {
+    
+    var body : some View {
+        
+    }
+    
+    
+    init(m: String) {
+        print(m)
     }
     
 }
